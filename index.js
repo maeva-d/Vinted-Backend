@@ -1,5 +1,5 @@
 // npm init -y
-// npm i express mongoose ui2d crypto-js
+// npm i express mongoose ui2d crypto-js dotenv
 // npm i cloudinary express-fileupload
 
 const express = require("express");
@@ -9,13 +9,15 @@ const fileUpload = require("express-fileupload"); // permet de récupérer les f
 // importer cloudinary et renseigner ses identifiants dans la config du package
 const cloudinary = require("cloudinary").v2;
 
+require("dotenv").config();
+
 const app = express();
 app.use(express.json());
 
 // On fait tourner le serveur local avec npx nodemon
 
 // On relie notre serveur à la BDD ET on lui donne un nom!!!
-mongoose.connect("mongodb://localhost:27017/Vinted");
+mongoose.connect(process.env.MONGO_URI);
 
 const userRoutes = require("./routes/user");
 const offerRoutes = require("./routes/offer");
@@ -31,6 +33,6 @@ app.all("*", (req, res) => {
   res.status(404).json({ message: "This route does not exist" });
 });
 
-app.listen(3000, () => {
+app.listen(process.env.PORT || 3000, () => {
   console.log("Server started");
 });

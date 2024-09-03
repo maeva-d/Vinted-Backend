@@ -7,15 +7,16 @@ const User = require("../Models/User");
 //
 const fileupload = require("express-fileupload");
 const cloudinary = require("cloudinary").v2;
+require("dotenv").config();
 
 /////////////////
 // Grâce au middleware fileUpload, on a réussi à récupérer les fichiers envoyés via postman.
 // Ils sont désormais stockés dans req.files (voir console.log() dans la route post) qui contiendra la clé dont nous nous sommes servis pour envoyer les fichiers
 // maintenant, il faut renseigner ses identifiants dans la config du package (où ça?)
 cloudinary.config({
-  cloud_name: "dnsafqpw9",
-  api_key: "148666823698259",
-  api_secret: "JocQNRg3Em-69SExetkJAix82T0",
+  cloud_name: process.env.CLOUDINARY_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 // On ne peut pas directement envoyer un buffer à Cloudinary.
 // C'est pourquoi nous allons devoir transformer le buffer en base64, qui est un format compréhensible par Cloudinary.
@@ -24,7 +25,7 @@ const convertToBase64 = (file) => {
   return `data:${file.mimetype};base64,${file.data.toString("base64")}`;
 };
 
-// importation de mon middlewear
+// importation de mon middlew
 const isAuthenticated = require("../middlewares/isAuthenticated");
 
 ////// ROUTES
