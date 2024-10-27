@@ -4,81 +4,138 @@ const User = require("../Models/User");
 
 //*********Crypter les MDP *********//
 const uid2 = require("uid2");
-// ./node_modules/crypto-js/enc-base64
 const encBase64 = require("../node_modules/crypto-js/enc-base64");
-// ./node_modules/crypto-js/sha256"
 const SHA256 = require("../node_modules/crypto-js/sha256");
+
+// //********* Envoyer une photo (photo de profil) *********//
+const fileupload = require("express-fileupload");
+const cloudinary = require("cloudinary").v2;
+require("dotenv").config();
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+const convertToBase64 = (file) => {
+  return `data:${file.mimetype};base64,${file.data.toString("base64")}`;
+};
 
 //////// ROUTES ////////
 
-// route "/user/signup" de type POST
-router.post("/user/signup", async (req, res) => {
+//// SIGNUP
+router.post("/user/signup", fileupload(), async (req, res) => {
   try {
-    //// Gérer les erreurs
-    // - Si l'email existe déjà
-    const email = req.body.email;
-    const accountsEmails = await User.findOne({ email: email }); // cet email est-il trouvé ou pas?
-    if (accountsEmails) {
-      return res.json({
-        message: "Vous possédez déjà un compte, veuillez vous connecter.",
-      });
-    }
-    const password = req.body.password;
-    // - Si le username n'est pas renseigné
-    if (!req.body.username) {
-      return res.json({ message: "Veuillez rentrer un nom d'utilisateur." });
-    }
+    const { email, username, password, newsletter, termsAndConditions } =
+      req.body;
+    const { avatar } = req.files;
+
     const salt = uid2(16);
     const hash = SHA256(password + salt).toString(encBase64);
     const token = uid2(64);
+    const avatarPicture = await cloudinary.uploader.upload(
+      convertToBase64(avatar)
+    );
+
+    //// Gérer les erreurs
+
+    // Si le MDP n'est pas rempli (on ne le sauvegarde jamais en BDD, donc on gère l'erreur ici) :
+    if (!password) {
+      return res
+        .status(403)
+        .json({ message: "Le mot de passe ne peut pas être vide." });
+    }
+
+    // - Si le MDP ne remplit pas le critère de longueur :
+    if (password.length < 7) {
+      return res
+        .status(403)
+        .json({ message: "Mot de passe : 7 caractères minimum" }); // OK !
+    }
+
+    // Le MDP doit contenir au moins 1 lettre et 1 chiffre :
+    const findLetters = /[a-zA-Z]/; // RegExp pour vérifier la présence de lettres
+    const findNumbers = /\d/; // RegExp pour vérifier la présence d'au moins un chiffre
+    if (!findLetters.test(password)) {
+      return res.status(403).json({
+        message: "Le mot de passe doit contenir au moins une lettre.",
+      });
+    }
+    if (!findNumbers.test(password)) {
+      return res.status(403).json({
+        message: "Le mot de passe doit contenir au moins un chiffre.",
+      });
+    }
+
+    // Si les termes & conditions ne sont pas acceptées :
+    if (termsAndConditions !== "true") {
+      // let termsAndConditionsInBooleanFalse = new Boolean("false");
+      // console.log("boolean or not? =>", termsAndConditionsInBooleanFalse);
+      return res
+        .status(403)
+        .json({ message: "Merci de confirmer pour poursuivre." });
+    }
+
+    //// Si tout va bien :
 
     const newAccount = new User({
       email: email,
       account: {
-        username: req.body.username,
-        avatar: req.body.avatar,
+        username: username,
+        avatar: avatarPicture,
       },
-      newsletter: req.body.newsletter,
+      newsletter: newsletter,
+      termsAndConditions: termsAndConditions,
       token: token,
       hash: hash,
       salt: salt,
     });
+
     await newAccount.save();
-    // Ce qu'il faudra répondre
+
     res.status(201).json({
       _id: newAccount._id,
       token: newAccount.token,
-      account: { username: newAccount.account.username },
+      account: {
+        username: newAccount.account.username,
+        avatar: newAccount.account.avatar,
+      },
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 });
 
-// pour la route user/login
+//// LOGIN
 router.post("/user/login", async (req, res) => {
   try {
-    const accountsToCheck = await User.findOne({ email: req.body.email });
-    console.log("accounts to check =>", accountsToCheck);
-    const passwordToCheck = req.body.password;
-    // Ce qu'il faudra répondre:
-    // - Si le mdp est correct
-    if (accountsToCheck.email === req.body.email) {
-      const hash = SHA256(passwordToCheck + accountsToCheck.salt).toString(
-        encBase64
-      );
+    const { email, password } = req.body;
+    const accountsToCheck = await User.findOne({ email: email });
+
+    //// Gérer les erreurs :
+    // - Si l'email n'existe pas en BDD :
+    if (!accountsToCheck.email) {
+      return res.status(403).json({ message: "Identifiant incorrect." });
+    }
+
+    // - Si l'email existe, on vérifie si le MDP est bon :
+    if (accountsToCheck.email === email) {
+      const hash = SHA256(password + accountsToCheck.salt).toString(encBase64);
       if (hash === accountsToCheck.hash) {
         return res.status(200).json({
           _id: accountsToCheck._id,
           token: accountsToCheck.token,
-          account: { username: accountsToCheck.account.username },
+          account: {
+            username: accountsToCheck.account.username,
+            avatar: accountsToCheck.account.avatar,
+          },
         });
+      } else {
+        // - Si le MDP est incorrect :
+        return res.status(409).json({ message: "MDP incorrect." });
       }
     }
-    // - S'il est incorrect
-    return res
-      .status(400)
-      .json({ message: "Le mot de passe saisi est incorrect." });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

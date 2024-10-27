@@ -12,7 +12,7 @@ require("dotenv").config();
 /////////////////
 // Grâce au middleware fileUpload, on a réussi à récupérer les fichiers envoyés via postman.
 // Ils sont désormais stockés dans req.files (voir console.log() dans la route post) qui contiendra la clé dont nous nous sommes servis pour envoyer les fichiers
-// maintenant, il faut renseigner ses identifiants dans la config du package (où ça?)
+// maintenant, il faut renseigner ses identifiants dans la config du package :
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -25,7 +25,7 @@ const convertToBase64 = (file) => {
   return `data:${file.mimetype};base64,${file.data.toString("base64")}`;
 };
 
-// importation de mon middlew
+// importation de mon middleware :
 const isAuthenticated = require("../middlewares/isAuthenticated");
 
 ////// ROUTES
@@ -43,9 +43,6 @@ router.post(
         convertToBase64(pictureToUpload)
       );
 
-      // on veut check si l'utilisateur peut poster une annonce: est-il connecté?
-      // ==> création du dossie middleware, l'utiliser dans la route après fileupload
-
       //// La requête
       const newOffer = new Offer({
         product_name: req.body.title,
@@ -58,7 +55,8 @@ router.post(
           { COULEUR: req.body.color },
           { EMPLACEMENT: req.body.city },
         ],
-        product_image: result,
+        // product_image: result,
+        product_images: [],
         owner: req.user._id,
       });
       await newOffer.save();
@@ -83,7 +81,8 @@ router.post(
           account: { username: req.user.account.username, avatar: {} },
           _id: req.user._id,
         },
-        product_image: { secure_url: result.secure_url },
+        // product_image: { secure_url: result.secure_url },
+        product_images: [],
       });
     } catch (error) {
       res.status(500).json({ message: error.message });
