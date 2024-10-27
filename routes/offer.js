@@ -5,8 +5,8 @@ const Offer = require("../Models/Offer");
 const cloudinary = require("cloudinary").v2;
 require("dotenv").config();
 // middlewares :
-const fileupload = require("express-fileupload");
 const isAuthenticated = require("../middlewares/isAuthenticated");
+const fileupload = require("express-fileupload");
 
 /////////////////
 // Grâce au middleware fileUpload, on a réussi à récupérer les fichiers envoyés via postman.
@@ -25,8 +25,9 @@ const convertToBase64 = (file) => {
 };
 
 ////// ROUTES
+// Poster une annonce :
 router.post(
-  "/offer/publish",
+  "/offers/publish",
   isAuthenticated,
   fileupload(),
   async (req, res) => {
@@ -100,5 +101,34 @@ router.post(
     }
   }
 );
-/////////////////
+
+// Chercher une annonce par filtre :
+router.get("/offers", async (req, res) => {
+  try {
+    const limit = 2;
+
+    const { title, priceMin, priceMax, sort, pageNumber } = req.query;
+
+    const page = parseFloat(pageNumber);
+    let filters = {};
+    if (title || priceMin || priceMax || sort || page) {
+      filters = {
+        product_name: new RegExp(title, "i"),
+        minimum_price: priceMin,
+        maximum_price: priceMax,
+        sortedOrder: sort,
+        whichPage: page,
+      };
+      let result = await Offer.find().sort().skip(2).limit(2);
+      //   console.log("filters===>", filters); OK
+      return res.json({ message: result });
+    }
+
+    const result = await Offer.find({}).sort({}.skip(2).limit(2));
+    res.json({ message: result });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;
