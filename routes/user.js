@@ -115,7 +115,7 @@ router.post("/user/login", async (req, res) => {
 
     //// Gérer les erreurs :
     // - Si l'email n'existe pas en BDD :
-    if (!accountsToCheck.email) {
+    if (accountsToCheck.email !== email) {
       return res.status(403).json({ message: "Identifiant incorrect." });
     }
 

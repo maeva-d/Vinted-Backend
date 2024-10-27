@@ -1,17 +1,16 @@
 const express = require("express");
 const router = express.Router();
 const Offer = require("../Models/Offer");
-// Et ça ?
-const mongoose = require("mongoose");
-const User = require("../Models/User");
-//
-const fileupload = require("express-fileupload");
+// Uploads de photos :
 const cloudinary = require("cloudinary").v2;
 require("dotenv").config();
+// middlewares :
+const fileupload = require("express-fileupload");
+const isAuthenticated = require("../middlewares/isAuthenticated");
 
 /////////////////
 // Grâce au middleware fileUpload, on a réussi à récupérer les fichiers envoyés via postman.
-// Ils sont désormais stockés dans req.files (voir console.log() dans la route post) qui contiendra la clé dont nous nous sommes servis pour envoyer les fichiers
+// Ils sont désormais stockés dans req.files (voir console.log()) qui contiendra la clé dont nous nous sommes servis pour envoyer les fichiers
 // maintenant, il faut renseigner ses identifiants dans la config du package :
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_NAME,
@@ -25,9 +24,6 @@ const convertToBase64 = (file) => {
   return `data:${file.mimetype};base64,${file.data.toString("base64")}`;
 };
 
-// importation de mon middleware :
-const isAuthenticated = require("../middlewares/isAuthenticated");
-
 ////// ROUTES
 router.post(
   "/offer/publish",
@@ -35,54 +31,69 @@ router.post(
   fileupload(),
   async (req, res) => {
     try {
-      // console.log(req.files.picture);
-      const pictureToUpload = req.files.picture;
+      // Toutes les photos converties seront dans un tableau :
+      const picturesToUpload = req.files.pictures; // Arr si + de deux fichiers : OK !
+      // Push les photos converties dans un nouveau tableau :
+      let galleryArr = [];
       // Le package cloudinary utilise la méthode cloudinary.uploader.upload(file, options, callback) pour envoyer un fichier.
       // On devra remplacer file par notre fichier au format base64. Les paramètres options et callback sont facultatifs.
-      const result = await cloudinary.uploader.upload(
-        convertToBase64(pictureToUpload)
-      );
+      if (picturesToUpload.length > 1) {
+        for (let pic of picturesToUpload) {
+          const pictureConverted = await cloudinary.uploader.upload(
+            convertToBase64(pic)
+          );
+          galleryArr.push(pictureConverted);
+        }
+      } else {
+        const pictureConverted = await cloudinary.uploader.upload(
+          convertToBase64(picturesToUpload)
+        );
+        galleryArr.push(pictureConverted);
+      }
 
-      //// La requête
+      //// La requête en BDD
+      const { title, description, price, brand, size, condition, color, city } =
+        req.body;
+
       const newOffer = new Offer({
-        product_name: req.body.title,
-        product_description: req.body.description,
-        product_price: req.body.price,
+        product_name: title,
+        product_description: description,
+        product_price: price,
         product_details: [
-          { MARQUE: req.body.brand },
-          { TAILLE: req.body.size },
-          { ETAT: req.body.condition },
-          { COULEUR: req.body.color },
-          { EMPLACEMENT: req.body.city },
+          { MARQUE: brand },
+          { TAILLE: size },
+          { ETAT: condition },
+          { COULEUR: color },
+          { EMPLACEMENT: city },
         ],
-        // product_image: result,
-        product_images: [],
+        product_images: galleryArr,
         owner: req.user._id,
       });
+
       await newOffer.save();
 
-      //   console.log("req.user ==>", req.user);
-      //   console.log("req.user.account ==>", req.user.account); //  { username: 'John Doe' }
-      //   console.log("req.user.account ==>", req.user.account.username); //  { username: 'John Doe' }
       //// répondre :
       return res.status(201).json({
         _id: newOffer._id,
-        product_name: req.body.title,
-        product_description: req.body.description,
-        product_price: req.body.price,
+        product_name: title,
+        product_description: description,
+        product_price: price,
         product_details: [
-          { MARQUE: req.body.brand },
-          { TAILLE: req.body.size },
-          { ETAT: req.body.condition },
-          { COULEUR: req.body.color },
-          { EMPLACEMENT: req.body.city },
+          { MARQUE: brand },
+          { TAILLE: size },
+          { ETAT: condition },
+          { COULEUR: color },
+          { EMPLACEMENT: city },
         ],
+        product_images: galleryArr,
+
         owner: {
-          account: { username: req.user.account.username, avatar: {} },
+          account: {
+            username: req.user.account.username,
+            avatar: req.user.account.avatar,
+          },
           _id: req.user._id,
         },
-        // product_image: { secure_url: result.secure_url },
-        product_images: [],
       });
     } catch (error) {
       res.status(500).json({ message: error.message });
