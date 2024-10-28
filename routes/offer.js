@@ -170,7 +170,6 @@ router.get("/offers/:id", async (req, res) => {
       path: "owner",
       select: "account",
     });
-    console.log("one offer=>", offerInfos);
     res.status(200).json(offerInfos);
   } catch (error) {
     res.status(500).json({ error: error.message });
