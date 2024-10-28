@@ -32,19 +32,25 @@ router.post(
   fileupload(),
   async (req, res) => {
     try {
-      // Toutes les photos seront dans un tableau :
-      const picturesToUpload = req.files.pictures;
-      // Push les photos converties dans un nouveau tableau :
+      let picturesToUpload;
       let picturesArray = [];
-      // Le package cloudinary utilise la méthode cloudinary.uploader.upload(file, options, callback) pour envoyer un fichier.
-      // On devra remplacer file par notre fichier au format base64. Les paramètres options et callback sont facultatifs.
 
-      // Note : .forEach() n'est pas approprié car appel une callback qui devra être async (on ne veut pas ça) et for ... of doit itérer sur un itérable;
-      // Donc on utilisera une boucle for classique :
-      if (picturesToUpload.length !== -1) {
-        for (let i = 0; i < picturesToUpload.length; i++) {
+      if (req.files !== null) {
+        picturesToUpload = req.files.pictures;
+        // Note : .forEach() n'est pas approprié car appel une callback qui devra être async (on ne veut pas ça) et for ... of doit itérer sur un itérable;
+        // Donc on utilisera une boucle for classique :
+        if (picturesToUpload.length > 1) {
+          for (let i = 0; i < picturesToUpload.length; i++) {
+            // Le package cloudinary utilise la méthode cloudinary.uploader.upload(file, options, callback) pour envoyer un fichier.
+            // On devra remplacer file par notre fichier au format base64. Les paramètres options et callback sont facultatifs.
+            const pictureConverted = await cloudinary.uploader.upload(
+              convertToBase64(picturesToUpload[i])
+            );
+            picturesArray.push(pictureConverted);
+          }
+        } else {
           const pictureConverted = await cloudinary.uploader.upload(
-            convertToBase64(picturesToUpload[i])
+            convertToBase64(picturesToUpload)
           );
           picturesArray.push(pictureConverted);
         }
@@ -103,8 +109,8 @@ router.post(
 router.get("/offers", async (req, res) => {
   try {
     const { title, priceMin, priceMax } = req.query;
-    const limit = 10 || parseFloat(req.query.limit);
-    const page = 1 || parseFloat(req.query.page);
+    const limit = 10 || Number(req.query.limit);
+    const page = 1 || Number(req.query.page);
     const skip = (page - 1) * limit;
 
     const filters = {};
@@ -113,20 +119,20 @@ router.get("/offers", async (req, res) => {
     if (title) {
       filters.product_name = new RegExp(title, "i");
     }
-    // Si j'ai une query priceMin ou PriceMax, ça veut dire qu'il me faut dans tous les cas une clé product_price, dont la valeur sera pour l'instant un objet vide :
+    // Si j'ai une query priceMin ou PriceMax, ça veut dire qu'il me faut dans tous les cas une clé product_price., dont la valeur sera pour l'instant un objet vide :
     if (priceMin || priceMax) {
       filters.product_price = {};
     }
-    // J'ai un priceMin ? Je lui ajoute une clé &gte pour avour tous les product price supérieurs ou égaux à priceMin :
+    // J'ai un priceMin ? Je lui ajoute une clé $gte pour avoir tous les product price supérieurs ou égaux à priceMin :
     if (priceMin) {
-      filters.product_price.$gte = parseFloat(priceMin);
+      filters.product_price.$gte = Number(priceMin);
     }
     // J'ai un priceMax ? Même logique :
     if (priceMax) {
-      filters.product_price.$lte = parseFloat(priceMax);
+      filters.product_price.$lte = Number(priceMax);
     }
 
-    // Tri en prix croissant ou décroissant :
+    //// Tri en prix croissant ou décroissant :
     const sort = {};
     // si req.query.sort === "price-asc" alors j'ajoute une clé product_price à l'objet sort...
     if (sort === "price-desc") {
@@ -137,10 +143,11 @@ router.get("/offers", async (req, res) => {
       sort.product_price = -1;
     }
 
-    console.log("filters===>", filters); // { product_price: { '$lte': 40 } }
+    // console.log("filters===>", filters); // ex :: { product_price: { '$lte': 40 } }
 
     const result = await Offer.find(filters)
       .populate({
+        // Aux résultats trouvés, je rajoute une clé owner qui contient juste les infos de sa clé account:
         path: "owner",
         select: "account",
       })
@@ -149,12 +156,25 @@ router.get("/offers", async (req, res) => {
       .skip(skip);
 
     console.log("results =>", result);
-    return res.json({ count: result.length, offers: result });
+    return res.json({ results: result.length, offers: result });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// Obtenir une annonce en particulier en fonction de son ID :
+// Obtenir les infos d'une annonce en particulier en fonction de son ID :
+router.get("/offers/:id", async (req, res) => {
+  try {
+    const offerInfos = await Offer.findById(req.params.id).populate({
+      // Je rajoute un populate() avec la clé account sur owner, sinon je n'ai que l'objectId comme valeur dans owner
+      path: "owner",
+      select: "account",
+    });
+    console.log("one offer=>", offerInfos);
+    res.status(200).json(offerInfos);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 module.exports = router;
