@@ -31,12 +31,11 @@ router.post("/user/signup", fileupload(), async (req, res) => {
       req.body;
 
     let avatar = null;
-    if (req.files.avatar) {
-      avatar = req.files.avatar;
-      console.log("avatar =>", avatar);
-    }
     let avatarPictureConverted = null;
-    if (avatar) {
+
+    if (req.files !== null) {
+      avatar = req.files.avatar;
+      // console.log("avatar =>", avatar);
       avatarPictureConverted = await cloudinary.uploader.upload(
         convertToBase64(avatar)
       );
