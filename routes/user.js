@@ -29,14 +29,22 @@ router.post("/user/signup", fileupload(), async (req, res) => {
   try {
     const { email, username, password, newsletter, termsAndConditions } =
       req.body;
-    const { avatar } = req.files;
+
+    let avatar = null;
+    if (req.files.avatar) {
+      avatar = req.files.avatar;
+      console.log("avatar =>", avatar);
+    }
+    let avatarPictureConverted = null;
+    if (avatar) {
+      avatarPictureConverted = await cloudinary.uploader.upload(
+        convertToBase64(avatar)
+      );
+    }
 
     const salt = uid2(16);
     const hash = SHA256(password + salt).toString(encBase64);
     const token = uid2(64);
-    const avatarPicture = await cloudinary.uploader.upload(
-      convertToBase64(avatar)
-    );
 
     //// Gérer les erreurs
 
@@ -44,7 +52,7 @@ router.post("/user/signup", fileupload(), async (req, res) => {
     if (!password) {
       return res
         .status(403)
-        .json({ message: "Le mot de passe ne peut pas être vide." });
+        .json({ message: "Le mot de passe ne peut pas être vide." }); // OK !
     }
 
     // - Si le MDP ne remplit pas le critère de longueur :
@@ -59,12 +67,12 @@ router.post("/user/signup", fileupload(), async (req, res) => {
     const findNumbers = /\d/; // RegExp pour vérifier la présence d'au moins un chiffre
     if (!findLetters.test(password)) {
       return res.status(403).json({
-        message: "Le mot de passe doit contenir au moins une lettre.",
+        message: "Le mot de passe doit contenir au moins une lettre.", // OK !
       });
     }
     if (!findNumbers.test(password)) {
       return res.status(403).json({
-        message: "Le mot de passe doit contenir au moins un chiffre.",
+        message: "Le mot de passe doit contenir au moins un chiffre.", // OK !
       });
     }
 
@@ -83,7 +91,7 @@ router.post("/user/signup", fileupload(), async (req, res) => {
       email: email,
       account: {
         username: username,
-        avatar: avatarPicture,
+        avatar: avatarPictureConverted,
       },
       newsletter: newsletter,
       termsAndConditions: termsAndConditions,
@@ -111,6 +119,7 @@ router.post("/user/signup", fileupload(), async (req, res) => {
 router.post("/user/login", async (req, res) => {
   try {
     const { email, password } = req.body;
+
     const accountsToCheck = await User.findOne({ email: email });
 
     //// Gérer les erreurs :

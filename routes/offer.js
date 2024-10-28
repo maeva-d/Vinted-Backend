@@ -32,27 +32,25 @@ router.post(
   fileupload(),
   async (req, res) => {
     try {
-      // Toutes les photos converties seront dans un tableau :
-      const picturesToUpload = req.files.pictures; // Arr si + de deux fichiers : OK !
+      // Toutes les photos seront dans un tableau :
+      const picturesToUpload = req.files.pictures;
       // Push les photos converties dans un nouveau tableau :
-      let galleryArr = [];
+      let picturesArray = [];
       // Le package cloudinary utilise la méthode cloudinary.uploader.upload(file, options, callback) pour envoyer un fichier.
       // On devra remplacer file par notre fichier au format base64. Les paramètres options et callback sont facultatifs.
-      if (picturesToUpload.length > 1) {
-        for (let pic of picturesToUpload) {
+
+      // Note : .forEach() n'est pas approprié car appel une callback qui devra être async (on ne veut pas ça) et for ... of doit itérer sur un itérable;
+      // Donc on utilisera une boucle for classique :
+      if (picturesToUpload.length !== -1) {
+        for (let i = 0; i < picturesToUpload.length; i++) {
           const pictureConverted = await cloudinary.uploader.upload(
-            convertToBase64(pic)
+            convertToBase64(picturesToUpload[i])
           );
-          galleryArr.push(pictureConverted);
+          picturesArray.push(pictureConverted);
         }
-      } else {
-        const pictureConverted = await cloudinary.uploader.upload(
-          convertToBase64(picturesToUpload)
-        );
-        galleryArr.push(pictureConverted);
       }
 
-      //// La requête en BDD
+      //// L'envoi en BDD
       const { title, description, price, brand, size, condition, color, city } =
         req.body;
 
@@ -67,7 +65,7 @@ router.post(
           { COULEUR: color },
           { EMPLACEMENT: city },
         ],
-        product_images: galleryArr,
+        product_images: picturesArray,
         owner: req.user._id,
       });
 
@@ -86,8 +84,7 @@ router.post(
           { COULEUR: color },
           { EMPLACEMENT: city },
         ],
-        product_images: galleryArr,
-
+        product_images: picturesArray,
         owner: {
           account: {
             username: req.user.account.username,
@@ -105,30 +102,59 @@ router.post(
 // Chercher une annonce par filtre :
 router.get("/offers", async (req, res) => {
   try {
-    const limit = 2;
+    const { title, priceMin, priceMax } = req.query;
+    const limit = 10 || parseFloat(req.query.limit);
+    const page = 1 || parseFloat(req.query.page);
+    const skip = (page - 1) * limit;
 
-    const { title, priceMin, priceMax, sort, pageNumber } = req.query;
+    const filters = {};
 
-    const page = parseFloat(pageNumber);
-    let filters = {};
-    if (title || priceMin || priceMax || sort || page) {
-      filters = {
-        product_name: new RegExp(title, "i"),
-        minimum_price: priceMin,
-        maximum_price: priceMax,
-        sortedOrder: sort,
-        whichPage: page,
-      };
-      let result = await Offer.find().sort().skip(2).limit(2);
-      //   console.log("filters===>", filters); OK
-      return res.json({ message: result });
+    // Si j'ai un titre, j'ajoute une clé product_name qui cherchera tous les product name correspondant à title :
+    if (title) {
+      filters.product_name = new RegExp(title, "i");
+    }
+    // Si j'ai une query priceMin ou PriceMax, ça veut dire qu'il me faut dans tous les cas une clé product_price, dont la valeur sera pour l'instant un objet vide :
+    if (priceMin || priceMax) {
+      filters.product_price = {};
+    }
+    // J'ai un priceMin ? Je lui ajoute une clé &gte pour avour tous les product price supérieurs ou égaux à priceMin :
+    if (priceMin) {
+      filters.product_price.$gte = parseFloat(priceMin);
+    }
+    // J'ai un priceMax ? Même logique :
+    if (priceMax) {
+      filters.product_price.$lte = parseFloat(priceMax);
     }
 
-    const result = await Offer.find({}).sort({}.skip(2).limit(2));
-    res.json({ message: result });
+    // Tri en prix croissant ou décroissant :
+    const sort = {};
+    // si req.query.sort === "price-asc" alors j'ajoute une clé product_price à l'objet sort...
+    if (sort === "price-desc") {
+      // ... qui vaut 1 pour trier en ordre asc :
+      sort.product_price = 1;
+    } else if (sort === "price-asc") {
+      // ... qui vaut -1 pour trier en ordre desc :
+      sort.product_price = -1;
+    }
+
+    console.log("filters===>", filters); // { product_price: { '$lte': 40 } }
+
+    const result = await Offer.find(filters)
+      .populate({
+        path: "owner",
+        select: "account",
+      })
+      .sort(sort)
+      .limit(limit)
+      .skip(skip);
+
+    console.log("results =>", result);
+    return res.json({ count: result.length, offers: result });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
+
+// Obtenir une annonce en particulier en fonction de son ID :
 
 module.exports = router;

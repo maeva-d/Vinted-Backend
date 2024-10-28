@@ -15,9 +15,11 @@ const offerSchema = new Schema({
     required: [true, "Tu dois donner un prix à ton article"],
     min: [1, "Le prix ne peut pas être en-dessous de 1 euro"],
     max: [10000, "Le prix ne peut pas dépasser 10 000 euros."],
+  },
+  product_description: {
+    type: String,
     maxLength: [500, "limite de caractère atteinte"],
   },
-  product_description: String,
   product_details: Array,
   product_images: Array,
   owner: {
