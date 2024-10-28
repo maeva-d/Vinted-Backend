@@ -33,7 +33,7 @@ router.post("/user/signup", fileupload(), async (req, res) => {
     let avatar = null;
     let avatarPictureConverted = null;
 
-    if (req.files !== null) {
+    if (req.files) {
       avatar = req.files.avatar;
       // console.log("avatar =>", avatar);
       avatarPictureConverted = await cloudinary.uploader.upload(
