@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const Offer = require("../Models/Offers");
+const Offer = require("../Models/Offer");
 // Uploads de photos :
 const cloudinary = require("cloudinary").v2;
 require("dotenv").config();
