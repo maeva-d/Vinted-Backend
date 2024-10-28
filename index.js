@@ -1,8 +1,9 @@
 // npm init -y
-// npm i express mongoose ui2d crypto-js dotenv
+// npm i express mongoose ui2d crypto-js dotenv cors
 // npm i cloudinary express-fileupload
 
 const express = require("express");
+const cors = require("cors");
 const mongoose = require("mongoose");
 // nouveau
 const fileUpload = require("express-fileupload"); // permet de récupérer les fichiers transmis par les clients
@@ -12,6 +13,7 @@ const cloudinary = require("cloudinary").v2;
 require("dotenv").config();
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
 // On fait tourner le serveur local avec npx nodemon
@@ -24,7 +26,6 @@ const offersRoutes = require("./routes/offers");
 
 app.use(userRoutes);
 app.use(offersRoutes);
-// app.use(offersRoutes);
 
 /////////////// On n'y touche pas ///////////////
 
