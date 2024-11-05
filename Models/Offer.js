@@ -8,7 +8,7 @@ const offerSchema = new Schema({
       true,
       "Tu dois donner un nom à ton article pour trouver de potentiels acheteurs!",
     ],
-    maxLength: [20, "limite de caractère atteinte"],
+    maxLength: [30, "limite de caractère atteinte"],
   },
   product_price: {
     type: Number,
