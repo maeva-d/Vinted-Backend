@@ -37,16 +37,8 @@ const userSchema = new Schema({
 userSchema.post("save", (error, doc, next) => {
   if (error.name === "MongoServerError" && error.code === 11000) {
     if (error.keyValue.email) {
-      next(new Error("Tu possèdes déja un compte !"));
+      next(new Error("Tu possèdes déjà un compte !"));
     }
-    // else if (error.keyValue.account.username) {
-    // console.log("clé account ? =>", error.keyValue.account);
-    // else if (error.keyValue["account.username"]) {
-    //  console.log("error keyValue arr =>", error.keyValue);
-    //  next(
-    //     new Error("Choisis un identifiant différent, celui-ci est déjà pris")
-    //   );
-    // }
   } else {
     console.log("err =>", error.keyValue);
     next();
