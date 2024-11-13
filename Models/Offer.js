@@ -23,13 +23,21 @@ const offerSchema = new Schema({
   product_details: Array,
   product_images: {
     type: Array,
-    validate: {
-      validator: function (value) {
-        return value.length > 0;
+    validate: [
+      {
+        validator: function (value) {
+          return value.length > 0;
+        },
+        // Si la valeur de retour est fausse :
+        message: "La photo est obligatoire",
       },
-      // Si la valeur de retour est fausse :
-      message: "La photo est obligatoire",
-    },
+      {
+        validator: function (value) {
+          return value.length < 3;
+        },
+        message: "Tu ne peux pas ajouter plus de deux photos pour l'instant :/",
+      },
+    ],
   },
   owner: {
     type: mongoose.Schema.Types.ObjectId,
