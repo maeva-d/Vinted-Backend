@@ -1,6 +1,9 @@
+const mongoose = require("mongoose");
 const express = require("express");
 const router = express.Router();
 const User = require("../Models/User");
+
+const handleErrorMessages = require("../functions/handleErrorMessages");
 
 //********* Crypter les MDP *********//
 const uid2 = require("uid2");
@@ -11,18 +14,6 @@ const SHA256 = require("../node_modules/crypto-js/sha256");
 const fileupload = require("express-fileupload");
 const cloudinary = require("cloudinary").v2;
 const convertToBase64 = require("../functions/cloudinary");
-
-// require("dotenv").config();
-
-// cloudinary.config({
-//   cloud_name: process.env.CLOUDINARY_NAME,
-//   api_key: process.env.CLOUDINARY_API_KEY,
-//   api_secret: process.env.CLOUDINARY_API_SECRET,
-// });
-
-// const convertToBase64 = (file) => {
-//   return `data:${file.mimetype};base64,${file.data.toString("base64")}`;
-// };
 
 //////// ROUTES ////////
 
@@ -103,7 +94,7 @@ router.post("/user/signup", fileupload(), async (req, res) => {
 
     await newAccount.save();
 
-    res.status(201).json({
+    return res.status(201).json({
       _id: newAccount._id,
       token: newAccount.token,
       account: {
@@ -112,7 +103,11 @@ router.post("/user/signup", fileupload(), async (req, res) => {
       },
     });
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    if (error instanceof mongoose.Error.ValidationError) {
+      return res.status(500).json(handleErrorMessages(error));
+    } else {
+      return res.status(500).json({ message: error.message });
+    }
   }
 });
 

@@ -5,10 +5,6 @@
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
-// nouveau
-const fileUpload = require("express-fileupload"); // permet de récupérer les fichiers transmis par les clients
-// importer cloudinary et renseigner ses identifiants dans la config du package
-const cloudinary = require("cloudinary").v2;
 
 require("dotenv").config();
 
