@@ -4,17 +4,14 @@ const { Schema } = mongoose;
 const offerSchema = new Schema({
   product_name: {
     type: String,
-    required: [
-      true,
-      "Tu dois donner un nom à ton article pour trouver de potentiels acheteurs!",
-    ],
+    required: [true, "Titre ne peut pas être vide."],
     maxLength: [50, "Limite de caractère atteinte"],
   },
   product_price: {
     type: Number,
-    required: [true, "Prix ne peut pas être vide"],
-    min: [1, "Le prix ne peut pas être en-dessous de 1 euro"],
-    max: [10000, "Le prix ne peut pas dépasser 10 000 euros"],
+    required: [true, "Prix ne peut pas être vide."],
+    min: [1, "Le prix ne peut pas être en-dessous de 1 euro."],
+    max: [10000, "Le prix ne peut pas dépasser 10 000 euros."],
   },
   product_description: {
     type: String,
@@ -30,7 +27,7 @@ const offerSchema = new Schema({
           return value.length > 0;
         },
         // Si la valeur de retour est fausse :
-        message: "La photo est obligatoire",
+        message: "La photo est obligatoire.",
       },
       {
         validator: function (value) {
