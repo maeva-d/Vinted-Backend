@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const express = require("express");
 const router = express.Router();
 const Offer = require("../Models/Offer");
@@ -7,6 +8,8 @@ require("dotenv").config();
 // middlewares :
 const isAuthenticated = require("../middlewares/isAuthenticated");
 const fileupload = require("express-fileupload");
+// Fonction pour gestion des erreurs :
+const handleErrorMessages = require("../functions/handleErrorMessages");
 
 /////////////////
 // Grâce au middleware fileUpload, on a réussi à récupérer les fichiers envoyés via postman.
@@ -100,7 +103,11 @@ router.post(
         },
       });
     } catch (error) {
-      res.status(500).json({ message: error.message });
+      if (error instanceof mongoose.Error.ValidationError) {
+        return res.status(500).json(handleErrorMessages(error));
+      } else {
+        return res.status(500).json({ message: error.message });
+      }
     }
   }
 );
