@@ -12,12 +12,13 @@ const offerSchema = new Schema({
   },
   product_price: {
     type: Number,
-    required: [true, "Tu dois donner un prix à ton article"],
+    required: [true, "Prix ne peut pas être vide"],
     min: [1, "Le prix ne peut pas être en-dessous de 1 euro"],
     max: [10000, "Le prix ne peut pas dépasser 10 000 euros"],
   },
   product_description: {
     type: String,
+    required: [true, "Description ne peut pas être vide."],
     maxLength: [500, "Limite de caractère atteinte"],
   },
   product_details: Array,
