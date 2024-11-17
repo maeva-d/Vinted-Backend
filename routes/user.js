@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const User = require("../Models/User");
 
-//*********Crypter les MDP *********//
+//********* Crypter les MDP *********//
 const uid2 = require("uid2");
 const encBase64 = require("../node_modules/crypto-js/enc-base64");
 const SHA256 = require("../node_modules/crypto-js/sha256");
@@ -10,17 +10,19 @@ const SHA256 = require("../node_modules/crypto-js/sha256");
 // //********* Envoyer une photo (photo de profil) *********//
 const fileupload = require("express-fileupload");
 const cloudinary = require("cloudinary").v2;
-require("dotenv").config();
+const convertToBase64 = require("../functions/cloudinary");
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+// require("dotenv").config();
 
-const convertToBase64 = (file) => {
-  return `data:${file.mimetype};base64,${file.data.toString("base64")}`;
-};
+// cloudinary.config({
+//   cloud_name: process.env.CLOUDINARY_NAME,
+//   api_key: process.env.CLOUDINARY_API_KEY,
+//   api_secret: process.env.CLOUDINARY_API_SECRET,
+// });
+
+// const convertToBase64 = (file) => {
+//   return `data:${file.mimetype};base64,${file.data.toString("base64")}`;
+// };
 
 //////// ROUTES ////////
 
@@ -30,12 +32,11 @@ router.post("/user/signup", fileupload(), async (req, res) => {
     const { email, username, password, newsletter, termsAndConditions } =
       req.body;
 
-    let avatar = null;
+    let avatar = req.files?.avatar;
     let avatarPictureConverted = null;
+    // console.log("avatar =>", avatar);
 
-    if (req.files) {
-      avatar = req.files.avatar;
-      // console.log("avatar =>", avatar);
+    if (avatar) {
       avatarPictureConverted = await cloudinary.uploader.upload(
         convertToBase64(avatar)
       );
@@ -46,7 +47,6 @@ router.post("/user/signup", fileupload(), async (req, res) => {
     const token = uid2(64);
 
     //// Gérer les erreurs
-
     // Si le MDP n'est pas rempli (on ne le sauvegarde jamais en BDD, donc on gère l'erreur ici) :
     if (!password) {
       return res
@@ -64,6 +64,8 @@ router.post("/user/signup", fileupload(), async (req, res) => {
     // Le MDP doit contenir au moins 1 lettre et 1 chiffre :
     const findLetters = /[a-zA-Z]/; // RegExp pour vérifier la présence de lettres
     const findNumbers = /\d/; // RegExp pour vérifier la présence d'au moins un chiffre
+    // const findSpecialCharacters = /[^a-zA-Z0-9\s_-]/g;
+
     if (!findLetters.test(password)) {
       return res.status(403).json({
         message: "Le mot de passe doit contenir au moins une lettre.", // OK !
