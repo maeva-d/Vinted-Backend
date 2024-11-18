@@ -37,15 +37,13 @@ router.post("/user/signup", fileupload(), async (req, res) => {
     const hash = SHA256(password + salt).toString(encBase64);
     const token = uid2(64);
 
-    //// Gérer les erreurs
-    // Si le MDP n'est pas rempli (on ne le sauvegarde jamais en BDD, donc on gère l'erreur ici) :
+    //// Gérer les erreurs relatives au MDP (on ne le sauvegarde jamais en BDD, donc on gère l'erreur ici) :
     if (!password) {
       return res
         .status(403)
         .json({ message: "Le mot de passe ne peut pas être vide." }); // OK !
     }
 
-    // - Si le MDP ne remplit pas le critère de longueur :
     if (password.length < 7) {
       return res
         .status(403)
@@ -69,13 +67,11 @@ router.post("/user/signup", fileupload(), async (req, res) => {
     }
 
     // Si les termes & conditions ne sont pas acceptées :
-    if (termsAndConditions !== "true") {
-      // let termsAndConditionsInBooleanFalse = new Boolean("false");
-      // console.log("boolean or not? =>", termsAndConditionsInBooleanFalse);
-      return res
-        .status(403)
-        .json({ message: "Merci de confirmer pour poursuivre." });
-    }
+    // if (termsAndConditions !== "true") {
+    //   return res
+    //     .status(403)
+    //     .json({ message: "Merci de confirmer pour poursuivre." });
+    // }
 
     //// Si tout va bien :
 
