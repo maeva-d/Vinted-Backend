@@ -24,8 +24,7 @@ router.post("/user/signup", fileupload(), async (req, res) => {
       req.body;
 
     let avatar = req.files?.avatar;
-    let avatarPictureConverted = null;
-    // console.log("avatar =>", avatar);
+    let avatarPictureConverted;
 
     if (avatar) {
       avatarPictureConverted = await cloudinary.uploader.upload(
@@ -65,15 +64,6 @@ router.post("/user/signup", fileupload(), async (req, res) => {
         message: "Le mot de passe doit contenir au moins un chiffre.", // OK !
       });
     }
-
-    // Si les termes & conditions ne sont pas acceptées :
-    // if (termsAndConditions !== "true") {
-    //   return res
-    //     .status(403)
-    //     .json({ message: "Merci de confirmer pour poursuivre." });
-    // }
-
-    //// Si tout va bien :
 
     const newAccount = new User({
       email: email,

@@ -49,15 +49,4 @@ const userSchema = new Schema({
   salt: String,
 });
 
-// userSchema.post("save", (error, doc, next) => {
-//   if (error.name === "MongoServerError" && error.code === 11000) {
-//     if (error.keyValue.email) {
-//       next(new Error("Tu possèdes déjà un compte !"));
-//     }
-//   } else {
-//     // console.log("err =>", error.keyValue);
-//     next();
-//   }
-// });
-
 module.exports = mongoose.model("User", userSchema);
