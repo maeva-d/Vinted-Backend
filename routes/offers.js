@@ -86,7 +86,7 @@ router.post(
       });
     } catch (error) {
       if (error instanceof mongoose.Error.ValidationError) {
-        return res.status(500).json(handleErrorMessages(error));
+        return res.status(403).json(handleErrorMessages(error));
       } else {
         return res.status(500).json({ message: error.message });
       }
@@ -139,7 +139,7 @@ router.get("/offers", async (req, res) => {
       .populate({
         // Aux résultats trouvés, je rajoute une clé owner qui contient juste les infos de sa clé account:
         path: "owner",
-        select: "account",
+        select: "_id account",
       })
       .sort(sort)
       .limit(limit)

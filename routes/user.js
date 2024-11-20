@@ -90,7 +90,7 @@ router.post("/user/signup", fileupload(), async (req, res) => {
     });
   } catch (error) {
     if (error instanceof mongoose.Error.ValidationError) {
-      return res.status(500).json(handleErrorMessages(error));
+      return res.status(403).json(handleErrorMessages(error));
     } else {
       return res.status(500).json({ message: error.message });
     }
@@ -124,7 +124,7 @@ router.post("/user/login", async (req, res) => {
         });
       } else {
         // - Si le MDP est incorrect :
-        return res.status(409).json({ message: "MDP incorrect." });
+        return res.status(403).json({ message: "MDP incorrect." });
       }
     }
   } catch (error) {
