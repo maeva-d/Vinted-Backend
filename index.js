@@ -1,21 +1,15 @@
 // npm init -y
-// npm i express mongoose ui2d crypto-js dotenv cors
-// npm i cloudinary express-fileupload
+// npm i express mongoose ui2d crypto-js dotenv cors cloudinary express-fileupload
 
 const express = require("express");
 const cors = require("cors");
-const mongoose = require("mongoose");
-
 require("dotenv").config();
+const mongoose = require("mongoose");
+mongoose.connect(process.env.MONGO_URI);
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-
-// On fait tourner le serveur local avec npx nodemon
-
-// On relie notre serveur à la BDD ET on lui donne un nom!!!
-mongoose.connect(process.env.MONGO_URI);
 
 const userRoutes = require("./routes/user");
 const offersRoutes = require("./routes/offers");
