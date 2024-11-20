@@ -87,7 +87,6 @@ MONGODB_URI=<votre-uri-mongodb>
 
 - **Responses :** 
   - 200 : Requête réussie
-  - 500 : Erreur côté serveur
 
 #### 1.2.Obtenir certaines offres précises
 - **URL :** ``/offers``
@@ -102,7 +101,6 @@ MONGODB_URI=<votre-uri-mongodb>
 
 - **Responses :** 
   - 200 : Requête réussie
-  - 500 : Erreur côté serveur
  
 #### 2.Obtenir les informations d'une annonce en particulier
 - **URL :** ``/offers/:id``
@@ -110,8 +108,6 @@ MONGODB_URI=<votre-uri-mongodb>
 - **Description :** Récupère les informations de l'annonce consultée. L'utilisateur peut aussi choisir d'acheter ou non l'article.
 - **Responses :** 
   - 200 : Requête réussie
-  - 500 : Erreur côté serveur
- 
 
  #### 3.Publier une annonce
  - **URL :** ``/offers/publish``
@@ -140,5 +136,5 @@ MONGODB_URI=<votre-uri-mongodb>
 
 - **Responses :** 
   - 201 : L'annonce a bien été créée
-  - 400 : Erreur dans le body (ex: champs manquants, ou non-conformes aux consignes d'inscription)
+  - 400 : Erreur dans le body (ex: champs manquants, ou non-conformes aux consignes)
   - 401 : Non autorisé (si le bearer token est absent ou invalide)
