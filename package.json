@@ -10,6 +10,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@stripe/react-stripe-js": "^3.0.0",
+    "@stripe/stripe-js": "^5.2.0",
     "cloudinary": "^2.4.0",
     "cors": "^2.8.5",
     "crypto-js": "^4.2.0",
