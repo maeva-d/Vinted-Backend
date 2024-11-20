@@ -19,9 +19,11 @@ mongoose.connect(process.env.MONGO_URI);
 
 const userRoutes = require("./routes/user");
 const offersRoutes = require("./routes/offers");
+const paymentRoutes = require("./routes/payment");
 
 app.use(userRoutes);
 app.use(offersRoutes);
+app.use(paymentRoutes);
 
 /////////////// On n'y touche pas ///////////////
 
