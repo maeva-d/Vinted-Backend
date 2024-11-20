@@ -16,7 +16,7 @@ Vinted-Backend est la partie backend Vinted-React, une mini-reproduction de la c
 1. Cloner le repo :
 ```
 
-git clone blablabla
+git clone https://github.com/maeva-d/Vinted-Backend.git
 
 ```
 
@@ -36,7 +36,9 @@ MONGODB_URI=<votre-uri-mongodb>
 
 **Note** : AUCUN mot de passe n'est stocké en base de donnée; ils sont cryptés à l'aide d'un hash + salt.
 
-### S'inscrire
+### Thématique de route : user
+
+#### 1.S'inscrire
 
 - **URL :** ``/user/signup``
 - **Method :** ``POST``
@@ -55,7 +57,7 @@ MONGODB_URI=<votre-uri-mongodb>
   - 400 : Erreur dans le body (ex: champs manquants, ou non-conformes aux consignes d'inscription)
   - 409 : Validation impossible (ex: email déjà utilisé)
 
-### Se connecter
+#### 2.Se connecter
 
 - **URL :** ``/user/login``
 - **Method :** ``POST``
