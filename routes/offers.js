@@ -86,7 +86,7 @@ router.post(
       });
     } catch (error) {
       if (error instanceof mongoose.Error.ValidationError) {
-        return res.status(403).json(handleErrorMessages(error));
+        return res.status(400).json(handleErrorMessages(error));
       } else {
         return res.status(500).json({ message: error.message });
       }
@@ -98,7 +98,7 @@ router.post(
 router.get("/offers", async (req, res) => {
   try {
     const { title, priceMin, priceMax } = req.query;
-    const limit = 10 || Number(req.query.limit);
+    const limit = 20 || Number(req.query.limit);
     const page = 1 || Number(req.query.page);
     const skip = (page - 1) * limit;
 
