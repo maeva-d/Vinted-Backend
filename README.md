@@ -5,7 +5,9 @@ Vinted-Backend est la partie backend Vinted-React, une mini-reproduction de la c
 ## Fonctionnalités
 - Inscription (création de compte) et connexion des utilisateurs
 - Publication d'annonces pour vendre un article
+- Recherche d'articles
 - Achat d'articles
+- Déconnexion
 
 ## Prérequis
 - [Node.js (v16+)](https://nodejs.org/en/download/package-manager)
@@ -20,7 +22,7 @@ git clone https://github.com/maeva-d/Vinted-Backend.git
 
 ```
 
-2. Accéder au dossier du projet : ``cd bla bla``
+2. Accéder au dossier du projet : ``cd BACK-END-VINTED``
 
 3. Installer les dépendances : ``yarn`` ou ``npm install``
 
@@ -34,7 +36,7 @@ MONGODB_URI=<votre-uri-mongodb>
 
 ## Endpoints de l'API
 
-**Note** : AUCUN mot de passe n'est stocké en base de donnée; ils sont cryptés à l'aide d'un hash + salt.
+**Note** : *AUCUN mot de passe n'est stocké en base de données; ils sont cryptés à l'aide d'un hash + salt.*
 
 ### Thématique de route : user
 
@@ -43,7 +45,7 @@ MONGODB_URI=<votre-uri-mongodb>
 - **URL :** ``/user/signup``
 - **Method :** ``POST``
 - **Description :** Permets de créer un nouvel utilisateur dans la base de donnée (si l'utilisateur ne possède pas déjà un compte). 
-- **Request body :**
+- **Request body (raw) :**
 ```
   {
   "username": "john-doe",
@@ -54,15 +56,14 @@ MONGODB_URI=<votre-uri-mongodb>
 
 - **Responses :** 
   - 201 : Le compte a bien été créé
-  - 400 : Erreur dans le body (ex: champs manquants, ou non-conformes aux consignes d'inscription)
-  - 409 : Validation impossible (ex: email déjà utilisé)
+  - 403 : Accès intedit (ex: champs manquants ou non-conformes aux consignes d'inscription, email ou pseudo déjà existant)
 
 #### 2.Se connecter
 
 - **URL :** ``/user/login``
 - **Method :** ``POST``
 - **Description :** Permets à l'utilisateur qui possède déjà un compte de se connecter. 
-- **Request body :**
+- **Request body (raw):**
 ```
 {
   "email": "john.doe@example.com",
@@ -72,5 +73,72 @@ MONGODB_URI=<votre-uri-mongodb>
 
 - **Responses :** 
   - 200 : Connexion réussie
-  - 400 : Erreur dans le body (ex: champs manquants, mauvais MDP ou identifiant)
+  - 403 : Accès interdit (ex: champs manquants, mauvais MDP ou identifiant)
 
+### Thématique de route : offers
+
+#### 1.1.Obtenir toutes les offres
+- **URL :** ``/offers``
+- **Method :** ``GET``
+- **Description :** L'utilisateur a accès à toutes les offres dans la BDD.
+- **Queries :**
+    - ``page`` (pour aller de page en page, avec ``1`` comme valeur par défaut)
+    - ``limit`` (la limite d'offres affichées par page, avec ``20`` comme valeur par défaut).
+
+- **Responses :** 
+  - 200 : Requête réussie
+  - 500 : Erreur côté serveur
+
+#### 1.2.Obtenir certaines offres précises
+- **URL :** ``/offers``
+- **Method :** ``GET``
+- **Description :** L'utilisateur recherche des offres dans la BDD à l'aide de filtres passés dans les queries.
+- **Queries :** 
+   - ``title`` (ex: pantalon, balenciaga, petite robe noire)
+   - ``priceMin`` (offres avec un prix supérieur on égal au prix renseigné par l'utilisateur)
+   - ``priceMax`` (offres avec un prix inférieur ou égal au prix renseigné par l'utilisateur)
+   - ``price-asc`` (offres triées par prix croissants)
+   - ``price-desc`` (offres triées par prix décroissants)
+
+- **Responses :** 
+  - 200 : Requête réussie
+  - 500 : Erreur côté serveur
+ 
+#### 2.Obtenir les informations d'une annonce en particulier
+- **URL :** ``/offers/:id``
+- **Method :** ``GET``
+- **Description :** Récupère les informations de l'annonce consultée. L'utilisateur peut aussi choisir d'acheter ou non l'article.
+- **Responses :** 
+  - 200 : Requête réussie
+  - 500 : Erreur côté serveur
+ 
+
+ #### 3.Publier une annonce
+ - **URL :** ``/offers/publish``
+- **Method :** ``POST``
+- **Description :** Permets à l'utilisateur déjà connecté de poster une annonce.
+- **Authorization :** Bearer token dans les headers.
+  ```
+  
+  Authorization : bearer <token>
+
+  ```
+- **Request body (form-data):**
+```
+{
+  "pictures" : <file> // obligatoire
+  "title" : "petite robe noire", // obligatoire
+  "description" : "je vends cette petite robe noire", // obligatoire
+  "price" : "555", // obligatoire
+  "brand" : "Chanel",
+  "size" : "36",
+  "condition" : "comme neuf",
+  "color" : "noire",
+  "city" : "Paris",
+}
+```
+
+- **Responses :** 
+  - 201 : L'annonce a bien été créée
+  - 400 : Erreur dans le body (ex: champs manquants, ou non-conformes aux consignes d'inscription)
+  - 401 : Non autorisé (si le bearer token est absent ou invalide)
