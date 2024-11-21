@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const express = require("express");
 const router = express.Router();
 const User = require("../Models/User");
-
+const isAuthenticated = require("../middlewares/isAuthenticated");
 const handleErrorMessages = require("../functions/handleErrorMessages");
 
 //********* Crypter les MDP *********//
@@ -22,15 +22,6 @@ router.post("/user/signup", fileupload(), async (req, res) => {
   try {
     const { email, username, password, newsletter, termsAndConditions } =
       req.body;
-
-    let avatar = req.files?.avatar;
-    let avatarPictureConverted;
-
-    if (avatar) {
-      avatarPictureConverted = await cloudinary.uploader.upload(
-        convertToBase64(avatar)
-      );
-    }
 
     const salt = uid2(16);
     const hash = SHA256(password + salt).toString(encBase64);
@@ -69,7 +60,6 @@ router.post("/user/signup", fileupload(), async (req, res) => {
       email: email,
       account: {
         username: username,
-        avatar: avatarPictureConverted,
       },
       newsletter: newsletter,
       termsAndConditions: termsAndConditions,
@@ -104,13 +94,10 @@ router.post("/user/login", async (req, res) => {
 
     const accountsToCheck = await User.findOne({ email: email });
 
-    //// Gérer les erreurs :
-    // - Si l'email n'existe pas en BDD :
     if (accountsToCheck.email !== email) {
       return res.status(403).json({ message: "Identifiant incorrect." });
     }
 
-    // - Si l'email existe, on vérifie si le MDP est bon :
     if (accountsToCheck.email === email) {
       const hash = SHA256(password + accountsToCheck.salt).toString(encBase64);
       if (hash === accountsToCheck.hash) {
@@ -123,7 +110,6 @@ router.post("/user/login", async (req, res) => {
           },
         });
       } else {
-        // - Si le MDP est incorrect :
         return res.status(403).json({ message: "MDP incorrect." });
       }
     }
@@ -131,5 +117,73 @@ router.post("/user/login", async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
+router.get("/user/:id", isAuthenticated, async (req, res) => {
+  try {
+    const userInfos = await User.findById(req.params.id);
+    res.status(200).json(userInfos);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// router.patch("/user/:id", isAuthenticated, async (req, res) => {
+//   try {
+//     const userToUpdate = await User.findById(req.params.id);
+
+//     if (!userToUpdate) {
+//       res.status(404).json({ message: "user not found" });
+//     }
+
+//     const { description } = req.body;
+//     let avatar = req.files?.avatar;
+//     let avatarPictureConverted = null;
+
+//     if (avatar) {
+//       avatarPictureConverted = await cloudinary.uploader.upload(
+//         convertToBase64(avatar)
+//       );
+//       userToUpdate.account.avatar = avatarPictureConverted;
+//     }
+//     if (description) userToUpdate.description = description;
+
+//     await userToUpdate.save();
+
+//     console.log("user updated =>", userToUpdate);
+//     return res.status(200).json(userToUpdate);
+
+//     // return res.status(200).json({
+//     //   account: {
+//     //     username: userToUpdate.username,
+//     //     avatar: userToUpdate.avatar,
+//     //   },
+//     //   email: userToUpdate.email,
+//     //   decription: userToUpdate.description,
+//     //   newsletter: userToUpdate.newsletter,
+//     // });
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// });
+
+// router.delete("/user/:id", isAuthenticated, async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const userToDelete = await User.findById(id);
+
+//     if (!userToDelete) {
+//       return res.status(404).json({ message: "user not found" });
+//     }
+
+//     await userToDelete.findByIdAndDelete(id);
+
+//     return res.status(200).json({
+//       message:
+//         "Ton compte a bien été supprimé, nous sommes tristes de te voir partir :(",
+//     });
+//   } catch (error) {
+//     return res.status(500).json({ message: error.message });
+//   }
+// });
 
 module.exports = router;
