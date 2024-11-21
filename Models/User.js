@@ -4,8 +4,8 @@ const { Schema } = mongoose;
 const userSchema = new Schema({
   email: {
     type: String,
-    unique: true,
     required: [true, "L'email ne peut pas être vide"],
+    unique: true,
     validate: {
       validator: async function (value) {
         const existingEmail = await mongoose
@@ -17,11 +17,10 @@ const userSchema = new Schema({
     },
   },
   account: {
-    avatar: Object,
     username: {
       type: String,
-      unique: true,
       required: [true, "Le nom d'utilisateur ne peut pas être vide"],
+      unique: true,
       validate: {
         validator: async function (value) {
           const existingUsername = await mongoose
@@ -32,6 +31,7 @@ const userSchema = new Schema({
         message: "Choisis un identifiant différent, celui-ci est déjà pris",
       },
     },
+    avatar: Object,
   },
   termsAndConditions: {
     type: Boolean,
@@ -44,6 +44,7 @@ const userSchema = new Schema({
     },
   },
   newsletter: Boolean,
+  description: String,
   token: String,
   hash: String,
   salt: String,
