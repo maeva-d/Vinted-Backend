@@ -10,7 +10,7 @@ const userSchema = new Schema({
       validator: async function (value) {
         const existingEmail = await mongoose
           .model("User")
-          .findOne({ "account.email": value });
+          .findOne({ email: value });
         return !existingEmail;
       },
       message: "Tu possèdes déjà un compte !",
