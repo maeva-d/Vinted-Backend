@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const Offer = require("./Offer");
 const { Schema } = mongoose;
 
 const userSchema = new Schema({
@@ -15,6 +16,7 @@ const userSchema = new Schema({
       },
       message: "Tu possèdes déjà un compte !",
     },
+    index: { unique: true, collation: { locale: "en", strength: 2 } },
   },
   account: {
     username: {
@@ -48,6 +50,11 @@ const userSchema = new Schema({
   token: String,
   hash: String,
   salt: String,
+});
+
+// cascade delete for user's offers when deleting account
+userSchema.pre("deleteOne", async function () {
+  await Offer.find({ owner: this._conditions._id }).deleteMany();
 });
 
 module.exports = mongoose.model("User", userSchema);

@@ -127,63 +127,17 @@ router.get("/user/:id", isAuthenticated, async (req, res) => {
   }
 });
 
-// router.patch("/user/:id", isAuthenticated, async (req, res) => {
-//   try {
-//     const userToUpdate = await User.findById(req.params.id);
+router.delete("/user/account", isAuthenticated, async (req, res) => {
+  try {
+    await req.user.deleteOne();
 
-//     if (!userToUpdate) {
-//       res.status(404).json({ message: "user not found" });
-//     }
-
-//     const { description } = req.body;
-//     let avatar = req.files?.avatar;
-//     let avatarPictureConverted = null;
-
-//     if (avatar) {
-//       avatarPictureConverted = await cloudinary.uploader.upload(
-//         convertToBase64(avatar)
-//       );
-//       userToUpdate.account.avatar = avatarPictureConverted;
-//     }
-//     if (description) userToUpdate.description = description;
-
-//     await userToUpdate.save();
-
-//     console.log("user updated =>", userToUpdate);
-//     return res.status(200).json(userToUpdate);
-
-//     // return res.status(200).json({
-//     //   account: {
-//     //     username: userToUpdate.username,
-//     //     avatar: userToUpdate.avatar,
-//     //   },
-//     //   email: userToUpdate.email,
-//     //   decription: userToUpdate.description,
-//     //   newsletter: userToUpdate.newsletter,
-//     // });
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// });
-
-// router.delete("/user/:id", isAuthenticated, async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const userToDelete = await User.findById(id);
-
-//     if (!userToDelete) {
-//       return res.status(404).json({ message: "user not found" });
-//     }
-
-//     await userToDelete.findByIdAndDelete(id);
-
-//     return res.status(200).json({
-//       message:
-//         "Ton compte a bien été supprimé, nous sommes tristes de te voir partir :(",
-//     });
-//   } catch (error) {
-//     return res.status(500).json({ message: error.message });
-//   }
-// });
+    return res.status(200).json({
+      message:
+        "Ton compte a bien été supprimé, nous sommes tristes de te voir partir :(",
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+});
 
 module.exports = router;
