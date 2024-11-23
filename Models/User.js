@@ -16,7 +16,6 @@ const userSchema = new Schema({
       },
       message: "Tu possèdes déjà un compte !",
     },
-    index: { unique: true, collation: { locale: "en", strength: 2 } },
   },
   account: {
     username: {
@@ -32,6 +31,7 @@ const userSchema = new Schema({
         },
         message: "Choisis un identifiant différent, celui-ci est déjà pris",
       },
+      index: { unique: true, collation: { locale: "en", strength: 2 } },
     },
     avatar: Object,
   },
