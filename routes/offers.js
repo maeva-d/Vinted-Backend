@@ -98,8 +98,8 @@ router.post(
 router.get("/offers", async (req, res) => {
   try {
     const { title, priceMin, priceMax } = req.query;
-    const limit = 20 || Number(req.query.limit);
-    const page = 1 || Number(req.query.page);
+    const limit = Number(req.query.limit) || 20;
+    const page = Number(req.query.page) || 1;
     const skip = (page - 1) * limit;
 
     const filters = {};
