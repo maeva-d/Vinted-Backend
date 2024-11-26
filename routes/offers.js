@@ -145,7 +145,9 @@ router.get("/offers", async (req, res) => {
       .limit(limit)
       .skip(skip);
 
-    return res.json({ count: result.length, limit: limit, offers: result });
+    const allResults = await Offer.find();
+
+    return res.json({ count: allResults.length, limit: limit, offers: result });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
