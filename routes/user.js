@@ -118,7 +118,7 @@ router.post("/user/login", async (req, res) => {
   }
 });
 
-router.get("/user/:id", isAuthenticated, async (req, res) => {
+router.get("/user/:id", async (req, res) => {
   try {
     const userInfos = await User.findById(req.params.id);
 
