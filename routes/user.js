@@ -121,7 +121,16 @@ router.post("/user/login", async (req, res) => {
 router.get("/user/:id", isAuthenticated, async (req, res) => {
   try {
     const userInfos = await User.findById(req.params.id);
-    res.status(200).json(userInfos);
+
+    res.status(200).json({
+      _id: userInfos._id,
+      account: {
+        username: userInfos.account.username,
+        avatar: userInfos.account.avatar,
+      },
+      newsletter: userInfos.newsletter,
+      token: userInfos.token,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
