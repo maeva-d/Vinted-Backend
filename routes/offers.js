@@ -97,11 +97,12 @@ router.post(
 // Chercher une annonce par filtre :
 router.get("/offers", async (req, res) => {
   try {
-    const { title, priceMin, priceMax } = req.query;
+    const { title, priceMin, priceMax, sort } = req.query;
     const limit = Number(req.query.limit) || 20;
     const page = Number(req.query.page) || 1;
     const skip = (page - 1) * limit;
 
+    const allResults = await Offer.find();
     const filters = {};
 
     // Si j'ai un titre, j'ajoute une clé product_name qui cherchera tous les product name correspondant à title :
@@ -122,14 +123,15 @@ router.get("/offers", async (req, res) => {
     }
 
     //// Tri en prix croissant ou décroissant :
-    const sort = {};
+    const sorted = {};
+
     // si req.query.sort === "price-asc" alors j'ajoute une clé product_price à l'objet sort...
-    if (sort === "price-desc") {
-      // ... qui vaut 1 pour trier en ordre asc :
-      sort.product_price = 1;
-    } else if (sort === "price-asc") {
-      // ... qui vaut -1 pour trier en ordre desc :
-      sort.product_price = -1;
+    if (sort === "price-asc") {
+      // ... qui vaut 1 pour trier en ordre croissant :
+      sorted.product_price = 1;
+    } else if (sort === "price-desc") {
+      // ... qui vaut -1 pour trier en ordre decroissant :
+      sorted.product_price = -1;
     }
 
     // console.log("filters===>", filters); // ex :: { product_price: { '$lte': 40 } }
@@ -141,11 +143,9 @@ router.get("/offers", async (req, res) => {
         path: "owner",
         select: "_id account",
       })
-      .sort(sort)
+      .sort(sorted)
       .limit(limit)
       .skip(skip);
-
-    const allResults = await Offer.find();
 
     return res.json({ count: allResults.length, limit: limit, offers: result });
   } catch (error) {
