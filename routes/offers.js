@@ -6,6 +6,7 @@ const Offer = require("../Models/Offer");
 const isAuthenticated = require("../middlewares/isAuthenticated");
 const fileupload = require("express-fileupload"); // permet de récupérer les fichiers transmis par les clients
 // Uploads de photos :
+const sharp = require("sharp");
 const cloudinary = require("cloudinary").v2;
 const convertToBase64 = require("../functions/cloudinary");
 // Fonction pour gestion des erreurs :
@@ -26,20 +27,23 @@ router.post(
         picturesToUpload = req.files.pictures;
         // Note : .forEach() n'est pas approprié car appel une callback qui devra être async (on ne veut pas ça) et for ... of doit itérer sur un itérable;
         // Donc on utilisera une boucle for classique :
-        if (picturesToUpload.length > 1) {
-          for (let i = 0; i < picturesToUpload.length; i++) {
-            const pictureConverted = await cloudinary.uploader.upload(
-              convertToBase64(picturesToUpload[i])
-            );
-            picturesArray.push(pictureConverted);
-          }
-        } else {
+        // if (picturesToUpload.length > 1) {
+        for (let i = 0; i < picturesToUpload.length; i++) {
+          const resizePicture = await sharp(picturesToUpload[i]).resize({
+            width: 800,
+          }).toBuffer;
           const pictureConverted = await cloudinary.uploader.upload(
-            convertToBase64(picturesToUpload)
+            convertToBase64(resizePicture)
           );
           picturesArray.push(pictureConverted);
         }
+        // } else {
+        //   const pictureConverted = await cloudinary.uploader.upload(
+        //     convertToBase64(picturesToUpload)
+        //   );
+        // picturesArray.push(pictureConverted);
       }
+      // }
 
       //// L'envoi en BDD
       const { title, description, price, brand, size, condition, color, city } =
